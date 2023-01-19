@@ -1,68 +1,68 @@
 % this function generates the coodinates of the new pore.
-function addPore = newPoreCood(poreCood, poreRad, newPoreRad, xyzRange, ptl)
-% poreCood is a 1X3 array that contains the x,y,z coodinates of the existing pore
+function add_pore = newPoreCood(pore_coordinates, pore_radius, new_pore_radius, domain_length, pore_throat_length)
+% pore_coordinates is a 1X3 array that contains the x,y,z coodinates of the existing pore
 
-% poreRad is radius of the existing pore
+% pore_radius is radius of the existing pore
 
-% newPoreRad is the radius of the new pore
+% new_pore_radius is the radius of the new pore
 
-% xyzRange is half the designated length scale the rock domain in all
+% domain_length is half the designated length scale the rock domain in all
 % directions. since the digital rock is centerd at 0, the spatial
-% length of the rock along the X goes from -xyzRange to +xyzRange.Note
+% length of the rock along the X goes from -domain_length to +domain_length.Note
 % the rock domain is a perfect cube so this length scale is thee same in all directions.
 
 % defining the extreme limits of the incoming pore along the Y axis
-b = poreCood(1,2) - (poreRad+newPoreRad+ptl);
-a = poreCood(1,2) + (poreRad+newPoreRad+ptl);
+b = pore_coordinates(1,2) - (pore_radius + new_pore_radius + pore_throat_length);
+a = pore_coordinates(1,2) + (pore_radius + new_pore_radius + pore_throat_length);
 
 % defining the extreme limits of the incoming pore along the Z axis
-b2 = poreCood(1,3) - (poreRad+newPoreRad+ptl);
-a2 = poreCood(1,3) + (poreRad+newPoreRad+ptl);
+b2 = pore_coordinates(1,3) - (pore_radius + new_pore_radius + pore_throat_length);
+a2 = pore_coordinates(1,3) + (pore_radius + new_pore_radius + pore_throat_length);
 
 % the trigger vairable is only a jump start for the while loop
 trigger=0;
-while trigger==0 || wallCon(tempData2, xyzRange) == 1
-    trigger= 1;
+while trigger == 0 || wallCon(data, domain_length) == 1
+    trigger = 1;
     
     % initializing the Y and Z coodinates to jumpstart the while loop
-    tempY2 = -100000;
-    tempZ2 = -100000;
-    while tempY2 < -xyzRange || tempY2 > xyzRange || tempZ2 < -xyzRange || tempZ2 > xyzRange
-        tempY2 = (b-a).*rand(1) + a; % random from uniform distribution between the range of maximum values and within range the Y direction
-        tempZ2 = (b2-a2).*rand(1) + a2; % random from uniform distribution between the range of maximum values and within range the Z direction
+    y2 = -100000;
+    z2 = -100000;
+    while y2 < -domain_length || y2 > domain_length || z2 < -domain_length || z2 > domain_length
+        y2 = (b-a) .* rand(1) + a; % random from uniform distribution between the range of maximum values and within range the Y direction
+        z2 = (b2-a2) .* rand(1) + a2; % random from uniform distribution between the range of maximum values and within range the Z direction
     end
     
     % assigning the variables for the cordinates in the existing pore  
-    tempZ1 = poreCood(1,3);
-    tempY1 = poreCood(1,2);
-    tempX1 = poreCood(1,1);
+    z1 = pore_coordinates(1,3);
+    y1 = pore_coordinates(1,2);
+    x1 = pore_coordinates(1,1);
     
     % logic to place randomly find the distance between the two pores
-%     mn = max([poreRad, newPoreRad])*1.01; % extra 1% to ensure there is a bit of space to promote limited pore connection to a single pore
-%     mx = (poreRad + newPoreRad)*0.95; % extra 5% to ensure there is a minimum reasonable overlap between pores to prevent the mesh from crashing dues to self-intersection
-    disL = (poreRad + newPoreRad)+ptl; % random distnce betwen the two pores based on mn and mx
+%     mn = max([pore_radius, new_pore_radius])*1.01; % extra 1% to ensure there is a bit of space to promote limited pore connection to a single pore
+%     mx = (pore_radius + new_pore_radius)*0.95; % extra 5% to ensure there is a minimum reasonable overlap between pores to prevent the mesh from crashing dues to self-intersection
+    distance = (pore_radius + new_pore_radius)+pore_throat_length; % random distnce betwen the two pores based on mn and mx
 
     % math to estimate the corresponding x location of the new pore
-    tempX2a = tempX1 + sqrt(disL^2 - tempY1^2 + 2*tempY1*tempY2 - tempY2^2 - tempZ1^2 + 2*tempZ1*tempZ2 - tempZ2^2);
-    tempX2b = tempX1 - sqrt(disL^2 - tempY1^2 + 2*tempY1*tempY2 - tempY2^2 - tempZ1^2 + 2*tempZ1*tempZ2 - tempZ2^2);
-    tempX2a = real(tempX2a);
-    tempX2b = real(tempX2b);
+    x2_a = x1 + sqrt(distance ^2 - y1 ^2 + 2 * y1 * y2 - y2 ^2 - z1 ^2 + 2 * z1 * z2 - z2 ^2);
+    x2_b = x1 - sqrt(distance ^2 - y1 ^2 + 2 * y1 * y2 - y2 ^2 - z1 ^2 + 2 * z1 * z2 - z2 ^2);
+    x2_a = real(x2_a);
+    x2_b = real(x2_b);
     
     % Randomly select one of the two solutions and alternate if it is out of range
-    tempX2 = [tempX2a,tempX2b];
-    tempX2 = tempX2(randperm(length(tempX2)));
-    if tempX2(1,1) > -xyzRange  &&	tempX2(1,1) < xyzRange
-        tempX2 = tempX2(1,1);
+    x2 = [x2_a, x2_b];
+    x2 = x2(randperm(length(x2)));
+    if x2(1,1) > -domain_length  &&	x2(1,1) < domain_length
+        x2 = x2(1,1);
     else
-        tempX2 = tempX2(1,2);
+        x2 = x2(1,2);
     end
     
-    if tempX2 > xyzRange || tempX2 < -xyzRange
+    if x2 > domain_length || x2 < -domain_length
         trigger = 0;
     end
-    tempData2 = [tempX2,tempY2,tempZ2,newPoreRad];
+    data = [x2, y2, z2, new_pore_radius];
 end
 
 % return coordinates of new pore
-addPore = [tempX2,tempY2,tempZ2];
+add_pore = [x2, y2, z2];
 end

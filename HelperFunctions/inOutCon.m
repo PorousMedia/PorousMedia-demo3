@@ -2,24 +2,24 @@
 % boundaries. Goal is to
 % ensure all pores are connected to the inlet and outlet we want all porosity=
 % effective porosity
-function check3 = inOutCon (poreData,xRange)
-    % poreData is a 1X4 array that contains the x,y,z coodinates and the
+function checker = inOutCon(pore_data, domain_length)
+    % pore_data is a 1X4 array that contains the x,y,z coodinates and the
     % radius of the pore respectively. 
     
-    % xRange is half the designated length scale the rock domain in the X
+    % domain_length is half the designated length scale the rock domain in the X
     % direction. since the digital rock is centerd at 0, the spatial length
-    % of the rock along the X goes from -xRange to +xRange. Note the rock
+    % of the rock along the X goes from -domain_length to +domain_length. Note the rock
     % domain is a perfect cube so this length scale is thee same in all directions. 
 
     % defining the extreme limits of the incoming pore
-    xMin=poreData(1,1)-poreData(1,4);
-    xMax=poreData(1,1)+poreData(1,4);
+    x_min = pore_data(1,1) - pore_data(1,4);
+    x_max = pore_data(1,1) + pore_data(1,4);
     
     % detecting if the incoming pore will go past the range of the core
-    if xMin<-xRange || xMax>xRange % returns 1 if true and 0 if false
-        check3 = 1; 
+    if x_min < -domain_length || x_max > domain_length % returns 1 if true and 0 if false
+        checker = 1; 
     else
-        check3 = 0;
+        checker = 0;
     end
 
 end

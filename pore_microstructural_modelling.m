@@ -3,6 +3,11 @@
 
 clear
 
+% Add path to data and helper functions
+
+addpath('.\Data') 
+addpath('.\HelperFunctions') 
+
 % Enter Variables
 number_of_pores = 25; 
 porosity_adjustment = 0.92; % hyperparameter to make up for the overlap in order to maintain given porosity. Requires some tuning. Increasing this value reduces porosity. if the tuning is too close to 1 or too close to 0.5, the code will likely crash.0.87 is optimal
@@ -73,7 +78,7 @@ for ID= start:finish
                     
                 end
                 
-                if restart_trigger==1 % forcing the break of the outter loop because of the restart trigger
+                if restart_trigger == 1 % forcing the break of the outter loop because of the restart trigger
                     break
                 end
                 
@@ -85,7 +90,7 @@ for ID= start:finish
                 
                 if inOutCon(pore_bodies_temp2, domain_length) == 1 % detects if a pore has gone past the inlet and outlet so the next pore not added to it
                     
-                    if pore_throats(end,4)<0
+                    if pore_throats(end,4)<0 % assign end of pore throats for terminal pores
                         
                         pore_throats2 = cat(2, pore_bodies_temp2(end,1:3), pore_bodies_temp2(end,1:3));
                         pore_throats2(end,1) = domain_length*-1;
@@ -99,16 +104,16 @@ for ID= start:finish
                     
                     pore_throats = cat(1, pore_throats, pore_throats2);
     
-                    if origin_check == 0 
-                        origin_check = 1; % tells the program that ther other end of a complete connection between inlet and outlet is no longer the origin after this one time
-                        pore_bodies_temp = flipud(pore_bodies_temp); % added to the fartherst pore in the opposite direction if it is not also connected to an inlet or outlet
+                    if origin_check == 0 % i.e. pore terminates at the origin
+                        origin_check = 1; % tells the program that the other end of a complete connection between inlet and outlet is no longer the origin after this one time
+                        pore_bodies_temp = flipud(pore_bodies_temp); % since pores terminate at origin, the next pore is added here
                     else
-                        pore_bodies_temp = pore_bodies_temp(randperm(size(pore_bodies_temp, 1)),:);% or pore is added randomly at a new pore in the pore system
+                        pore_bodies_temp = pore_bodies_temp(randperm(size(pore_bodies_temp, 1)),:);% if we already have an initial end to end, randomly select a new pore to connect all the way to inlet or outlet
                     end
                     
-                    number_of_branches= number_of_branches+1;
+                    number_of_branches = number_of_branches+1;
                     count = 0;
-                    while ~isempty(pore_radius) && pore_bodies_temp(end,4) * 2 < pore_radius(1,:) % checking there is a pore left; and if the new pore is not more than twice the size of the pore its joining to..
+                    while ~isempty(pore_radius) && pore_bodies_temp(end,4) * 2 < pore_radius(1,:) % checking there is a pore left || and if the new pore is not more than twice the size of the pore its joining to..
                         pore_bodies_temp = pore_bodies_temp(randperm(size(pore_bodies_temp, 1)),:); % shuffle the pore data again if this is the case
                         count = count+1;
                         if count == number_of_pores % use teh number of pores as the limit of attempts
@@ -127,7 +132,7 @@ for ID= start:finish
                 
             end
             
-            pore_throats(1,:) = [];
+            pore_throats(1,:) = []; % not sure what happened here
         
             mx = pore_bodies_temp(:,1) + pore_bodies_temp(:,4); % estimate the farthest pore in positive x axis
             mn = pore_bodies_temp(:,1) - pore_bodies_temp(:,4); % estimate the farthest pore in negative x axis
@@ -140,7 +145,6 @@ for ID= start:finish
         
         % post processing
         pore_bodies_temp(1,5) = domain_length; % add domain length (half) to data output
-        pore_bodies_temp(1,6) = number_of_branches * 100; % add number of branches to data output
         
         if last ~= number_of_pores % remove extra pores at the end that donts connect to an inlet or outlet
             pore_bodies_temp = pore_bodies_temp(1:last,:);
@@ -148,14 +152,16 @@ for ID= start:finish
         end
         
         pore_bodies_temp = pore_bodies_temp/100; % dividing data by 100, something to do with star CCM+ and its capabilities for generating the surface files
-        pore_bodies_temp(:,4) = pore_bodies_temp(:,4);
+        pore_bodies_temp(1,6) = number_of_branches; % add number of branches to data output
+        pore_bodies_temp(:,4) = pore_bodies_temp(:,4); % not sure what happened here
         
         pore_throats(:,7) = ones( [1,length(pore_throats)] );
         pore_throats(:,7) = pore_throats(:,7)*pore_throat_radius;
+        pore_throats = pore_throats / 100;
         
         % export data output as a csv file for use in star CCM+
         writematrix(pore_bodies_temp,['pore_bodies_' num2str(ID) '.csv']);
-        writematrix(pore_throats/100,['pore_throats_' num2str(ID) '.csv']);
+        writematrix(pore_throats,['pore_throats_' num2str(ID) '.csv']);
         toc 
     
     else
