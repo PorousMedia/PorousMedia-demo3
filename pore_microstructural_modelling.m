@@ -169,3 +169,6 @@ for ID= start:finish
     end
 
 end
+
+plot_pore_body(pore_bodies_temp, pore_throats)
+plot_pore_throats(pore_throats)
