@@ -14,13 +14,13 @@ porosity_adjustment = 0.92; % hyperparameter to make up for the overlap in order
 start = 1; % first sample generated
 finish = 1; % last sample generated
 tolerance = 5; % percentage tolerance for total number of pores connected in the rock domain
-tolerance = (100-tolerance)/100;
+tolerance = (100-tolerance) / 100;
 
 % reading data
 filename = "sample_b.csv";
 pore_size_distribution = readmatrix(filename);
 pore_throat_radius = pore_size_distribution(1,4);
-porosity = pore_size_distribution(1,3)/100; 
+porosity = pore_size_distribution(1,3) / 100; 
 pore_throat_length = 1; % an assumption, we don't have a way of contstraining yet. Empirically, shorter length yeids higher permeability
 
 % pore-microstructural modelling
@@ -32,7 +32,7 @@ for ID= start:finish
         
         tic 
         rng shuffle 
-        total_pore_volume = (4/3) * pi .* pores .^3; % volume of each pore from the pore radii, assuming a spherical pore shape.
+        total_pore_volume = (4 / 3) * pi .* pores .^ 3; % volume of each pore from the pore radii, assuming a spherical pore shape.
         total_pore_volume = sum(total_pore_volume);
         rock_volume = total_pore_volume / porosity; 
         rock_volume = rock_volume * porosity_adjustment; % porosity_adjustment for overlap. 
@@ -52,9 +52,10 @@ for ID= start:finish
             pore_bodies = []; % an array to add details of pore details  that passes some tests.
             pore_bodies = cat(1, pore_bodies, pore_radius(1,:));
             pore_radius(1,:) = []; % as we add new pores to the list, the detil is deleted from the original collection of radius data to ensure they have equal weights
-            pore_coordinates = [0,0,0]; % coordinates of the first pore centered in the rock domain to [0,0,0] for  [x, y, z].
+            pore_coordinates = [0, 0, 0]; % coordinates of the first pore centered in the rock domain to [0,0,0] for  [x, y, z].
             pore_bodies_temp = cat(2, pore_coordinates, pore_bodies); % initialize variable to collect pore location radii with the first pore data [x, y, z, radius].
-            
+            pore_coordinates_inorder = pore_bodies_temp; % for playing the added pore in sequence in debugging plot
+
             pore_throats = [0, 0, 0, 0, 0, 0];% initializing pore throat [x1, y1, z1, x2, y2, z2] for a cylinder
             number_of_branches= 0; % initializing for number of branches in the flow domain.
             origin_check = 0; % initializing a check to see if the pore microstructure ends at the origin as it will be for the first connection from the origin to the inlet or outlet. 0 means it ends at the origin
@@ -72,7 +73,7 @@ for ID= start:finish
                     
                     if number_of_attempts == 50000 % decided its a fools errand at this point, so cancel operation and trigger a restart
                         disp(number_of_attempts)
-                        restart_trigger=1;
+                        restart_trigger = 1;
                         break
                     end
                     
@@ -86,6 +87,7 @@ for ID= start:finish
                 pore_throats = cat(1, pore_throats, pore_throats2); % appending the repective location of the pore throats
                 
                 pore_bodies_temp = cat(1, pore_bodies_temp, pore_bodies_temp2); % the new pore data has passed the tests and added to the overall pore system
+                pore_coordinates_inorder = cat(1, pore_coordinates_inorder, pore_bodies_temp2);
                 pore_radius(1,:) = []; % deletes the pore radius from the list of pore sizes
                 
                 if inOutCon(pore_bodies_temp2, domain_length) == 1 % detects if a pore has gone past the inlet and outlet so the next pore not added to it
@@ -148,10 +150,12 @@ for ID= start:finish
         
         if last ~= number_of_pores % remove extra pores at the end that donts connect to an inlet or outlet
             pore_bodies_temp = pore_bodies_temp(1:last,:);
+            pore_coordinates_inorder = pore_coordinates_inorder(1:last,:);
             pore_throats = pore_throats(1:(end-(number_of_pores-last)),:);
         end
         
         pore_bodies_temp = pore_bodies_temp/100; % dividing data by 100, something to do with star CCM+ and its capabilities for generating the surface files
+        pore_coordinates_inorder = pore_coordinates_inorder / 100;
         pore_bodies_temp(1,6) = number_of_branches; % add number of branches to data output
         pore_bodies_temp(:,4) = pore_bodies_temp(:,4); % not sure what happened here
         
@@ -170,5 +174,5 @@ for ID= start:finish
 
 end
 
-plot_pore_body(pore_bodies_temp, pore_throats)
-plot_pore_throats(pore_throats)
+plot_pore_body(pore_coordinates_inorder, domain_length) % this line runs a simulation of the process of adding the pores in order
+plot_pore_throats(pore_throats, domain_length) % this line shows the network skeleton
