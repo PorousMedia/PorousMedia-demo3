@@ -7,9 +7,10 @@ clear
 
 addpath('.\Data') 
 addpath('.\HelperFunctions') 
+addpath('.\STAR_Simulation')
 
 % Enter Variables
-number_of_pores = 25; 
+number_of_pores = 10; 
 porosity_adjustment = 0.92; % hyperparameter to make up for the overlap in order to maintain given porosity. Requires some tuning. Increasing this value reduces porosity. if the tuning is too close to 1 or too close to 0.5, the code will likely crash.0.87 is optimal
 start = 1; % first sample generated
 finish = 1; % last sample generated
@@ -174,5 +175,5 @@ for ID= start:finish
 
 end
 
-plot_pore_body(pore_coordinates_inorder, domain_length) % this line runs a simulation of the process of adding the pores in order
-plot_pore_throats(pore_throats, domain_length) % this line shows the network skeleton
+% plot_pore_body(pore_coordinates_inorder, domain_length) % this line runs a simulation of the process of adding the pores in order
+% plot_pore_throats(pore_throats, domain_length) % this line shows the network skeleton
